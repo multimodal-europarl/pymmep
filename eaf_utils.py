@@ -10,7 +10,7 @@ import base58, uuid
 
 def eaf_iterator(tx_dir="mmep-corpus/transcribed-audio", start=None, end=None):
     """
-    Returns an iterator of transcription files.
+    Returns an iterator of transcription file paths.
 
     tx_dir : root directory of trannscriptions
     start  : from yyyymm
@@ -34,17 +34,20 @@ def get_tiers(eaf, tx_only=False, language=None):
     Return Tier elems from eaf tree.
 
     KWARGS:
-        - tx_only: return only transcription tiers (not implemented)
+        - tx_only: return only transcription tiers
         - language: return tier of language (not implemented)
     """
-    return eaf.findall("TIER")
+    if tx_only:
+        return eaf.findall("TIER[@LINGUISTIC_TYPE_REF='default-lt']")
+    else:
+        return eaf.findall("TIER")
 
 
 
 
 def parse_eaf(eaf_path):
     """
-    Returns etree object from the eaf_path.
+    Returns eaf etree object from the eaf_path.
     """
     parser = etree.XMLParser(remove_blank_text=True)
     return  etree.parse(eaf_path, parser).getroot()
@@ -54,7 +57,7 @@ def parse_eaf(eaf_path):
 
 def write_eaf(eaf, eaf_path):
     """
-    Writes eaf tree to file.
+    Writes eaf tree (eaf) to file (eaf_path).
     """
     b = etree.tostring(
         eaf, pretty_print=True, encoding="utf-8", xml_declaration=True
