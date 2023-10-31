@@ -6,6 +6,9 @@ authors = ["BobBorges"]
 license = "MIT"
 readme = "README.md"
 
+[project.urls]
+Source = "https://github.com/multimodal-europarl/pymmep"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 lxml = "^4.9.3"
