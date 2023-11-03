@@ -12,9 +12,10 @@ def eaf_iterator(tx_dir="mmep-corpus/transcribed-audio", start=None, end=None):
     """
     Returns an iterator of transcription file paths.
 
-    tx_dir : root directory of trannscriptions
-    start  : from yyyymm
-    end    : to (incl) yyyymm
+    kwargs:
+    - `tx_dir`: root directory of trannscriptions
+    - `start`: from yyyymm
+    - `end`: to (incl) yyyymm
     """
     txs = Path(tx_dir)
     for tx in sorted(txs.glob("**/*.eaf")):
@@ -33,9 +34,9 @@ def get_tiers(eaf, tx_only=False, language=None):
     """
     Return Tier elems from eaf tree.
 
-    KWARGS:
-        - tx_only: return only transcription tiers
-        - language: return tier of language (not implemented)
+    kwargs:
+    - `tx_only`: return only transcription tiers
+    - `language`: return tier of language (not implemented)
     """
     if tx_only:
         return eaf.findall("TIER[@LINGUISTIC_TYPE_REF='default-lt']")
@@ -57,7 +58,7 @@ def parse_eaf(eaf_path):
 
 def write_eaf(eaf, eaf_path):
     """
-    Writes eaf tree (eaf) to file (eaf_path).
+    Writes eaf tree (`eaf`) to file (`eaf_path`).
     """
     b = etree.tostring(
         eaf, pretty_print=True, encoding="utf-8", xml_declaration=True
