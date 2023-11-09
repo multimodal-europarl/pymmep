@@ -69,6 +69,18 @@ def write_eaf(eaf, eaf_path):
 
 
 
+def get_time_slots(eaf):
+    """
+    Return time_slot elems from eaf tree.
+    
+    Input: lxml.etree._Element from get.root(); as delivered by parse_eaf() in this module
+    Output: [lxml.etree._Element], Elements with tag TIME_SLOT
+    """
+    return eaf.findall('TIME_ORDER/TIME_SLOT')
+
+
+
+
 def xml_formatted_uuid():
     """
     Generate a UUID and return it prepended with "i-" and formatted as a string
