@@ -91,14 +91,8 @@ def make_time_slot_dictionary(time_slot_list):
     Output: {'ID': Value}
         Keys are strings
         Values are ints
-    """
-    
-    time_slot_dictionary = {}
-
-    for time_slot in time_slot_list:
-        time_slot_dictionary[time_slot.attrib['TIME_SLOT_ID']] = int(time_slot.attrib['TIME_VALUE'])
-        
-    return time_slot_dictionary 
+    """    
+    return {time_slot.attrib['TIME_SLOT_ID']: int(time_slot.attrib['TIME_VALUE']) for time_slot in time_slot_list}
 
 
 
