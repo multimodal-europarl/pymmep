@@ -97,6 +97,22 @@ def make_time_slot_dictionary(time_slot_list):
 
 
 
+def make_tier_dic(tierlist):
+    """
+    Takes a list of tiers and returns a dictionary containing their IDs as keys and
+    the original tier as value.
+    This is very helpful for editing multiple, but not all tiers.
+    
+    Input: [lxml.etree._Element] with tag TIER and attributes 'TIER_ID'
+    OUTPUT:  {'ID': value}
+        Keys are strings
+        Values are lxml.etree._Element  
+    """
+    return {tier.attrib['TIER_ID']: tier for tier in tierlist}
+
+
+
+
 def xml_formatted_uuid():
     """
     Generate a UUID and return it prepended with "i-" and formatted as a string
