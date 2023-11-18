@@ -113,6 +113,17 @@ def make_tier_dic(tierlist):
 
 
 
+def get_decoration(eaf):
+    """
+    Takes the last two pieces of information exclusive to the .eaf from the
+    Header and Property.
+    With this all information can now be extracted from the .eaf.
+    """
+    return[eaf.attrib['DATE'], eaf.find("HEADER").find('PROPERTY').text]    
+
+
+
+
 def xml_formatted_uuid():
     """
     Generate a UUID and return it prepended with "i-" and formatted as a string
