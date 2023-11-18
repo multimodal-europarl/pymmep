@@ -8,6 +8,7 @@ import base58, uuid
 
 
 
+
 def eaf_iterator(tx_dir="mmep-corpus/transcribed-audio", start=None, end=None):
     """
     Returns an iterator of transcription file paths.
@@ -30,6 +31,17 @@ def eaf_iterator(tx_dir="mmep-corpus/transcribed-audio", start=None, end=None):
 
 
 
+def get_decoration(eaf):
+    """
+    Takes the last two pieces of information exclusive to the .eaf from the
+    Header and Property.
+    With this all information can now be extracted from the .eaf.
+    """
+    return [eaf.attrib['DATE'], eaf.find("HEADER").find('PROPERTY').text]
+
+
+
+
 def get_tiers(eaf, tx_only=False, language=None):
     """
     Return Tier elems from eaf tree.
@@ -46,12 +58,56 @@ def get_tiers(eaf, tx_only=False, language=None):
 
 
 
+def get_time_slots(eaf):
+    """
+    Return time_slot elems from eaf tree.
+
+    Input: lxml.etree._Element from get.root(); as delivered by parse_eaf() in this module
+    Output: [lxml.etree._Element], Elements with tag TIME_SLOT
+    """
+    return eaf.findall('TIME_ORDER/TIME_SLOT')
+
+
+
+
+def make_tier_dic(tierlist):
+    """
+    Takes a list of tiers and returns a dictionary containing their IDs as keys and
+    the original tier as value.
+    This is very helpful for editing multiple, but not all tiers.
+
+    Input: [lxml.etree._Element] with tag TIER and attributes 'TIER_ID'
+    OUTPUT:  {'ID': value}
+        Keys are strings
+        Values are lxml.etree._Element
+    """
+    return {tier.attrib['TIER_ID']: tier for tier in tierlist}
+
+
+
+
+def make_time_slot_dictionary(time_slot_list):
+    """
+    Takes a list of time slots and returns a dictionary containing their IDs as keys and
+    time values in milliseconds as values.
+
+    Input: [lxml.etree._Element] with tag TIME_SLOT and attributes 'TIME_SLOT_ID' and
+    'TIME_VALUE'; as delivered by get_time_slots() in this module
+    Output: {'ID': Value}
+        Keys are strings
+        Values are ints
+    """
+    return {time_slot.attrib['TIME_SLOT_ID']: int(time_slot.attrib['TIME_VALUE']) for time_slot in time_slot_list}
+
+
+
+
 def parse_eaf(eaf_path):
     """
     Returns eaf etree object from the eaf_path.
     """
     parser = etree.XMLParser(remove_blank_text=True)
-    return  etree.parse(eaf_path, parser).getroot()
+    return etree.parse(eaf_path, parser).getroot()
 
 
 
@@ -65,61 +121,6 @@ def write_eaf(eaf, eaf_path):
     )
     f = open(eaf_path, "wb")
     f.write(b)
-
-
-
-
-def get_time_slots(eaf):
-    """
-    Return time_slot elems from eaf tree.
-    
-    Input: lxml.etree._Element from get.root(); as delivered by parse_eaf() in this module
-    Output: [lxml.etree._Element], Elements with tag TIME_SLOT
-    """
-    return eaf.findall('TIME_ORDER/TIME_SLOT')
-
-
-
-
-def make_time_slot_dictionary(time_slot_list):
-    """
-    Takes a list of time slots and returns a dictionary containing their IDs as keys and
-    time values in milliseconds as values.
-    
-    Input: [lxml.etree._Element] with tag TIME_SLOT and attributes 'TIME_SLOT_ID' and 
-    'TIME_VALUE'; as delivered by get_time_slots() in this module
-    Output: {'ID': Value}
-        Keys are strings
-        Values are ints
-    """    
-    return {time_slot.attrib['TIME_SLOT_ID']: int(time_slot.attrib['TIME_VALUE']) for time_slot in time_slot_list}
-
-
-
-
-def make_tier_dic(tierlist):
-    """
-    Takes a list of tiers and returns a dictionary containing their IDs as keys and
-    the original tier as value.
-    This is very helpful for editing multiple, but not all tiers.
-    
-    Input: [lxml.etree._Element] with tag TIER and attributes 'TIER_ID'
-    OUTPUT:  {'ID': value}
-        Keys are strings
-        Values are lxml.etree._Element  
-    """
-    return {tier.attrib['TIER_ID']: tier for tier in tierlist}
-
-
-
-
-def get_decoration(eaf):
-    """
-    Takes the last two pieces of information exclusive to the .eaf from the
-    Header and Property.
-    With this all information can now be extracted from the .eaf.
-    """
-    return[eaf.attrib['DATE'], eaf.find("HEADER").find('PROPERTY').text]    
 
 
 
