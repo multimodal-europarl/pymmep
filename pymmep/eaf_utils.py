@@ -42,6 +42,15 @@ def get_decoration(eaf):
 
 
 
+def get_media_descriptors(eaf):
+    """
+    Take an eaf tree object and return <MEDIA_DESCRIPTOR> elements.
+    """
+    return eaf.find("HEADER").findall("MEDIA_DESCRIPTOR")
+
+
+
+
 def get_tiers(eaf, tx_only=False, language=None):
     """
     Return Tier elems from eaf tree.
