@@ -79,7 +79,7 @@ def get_time_slots(eaf):
 
 
 
-def make_tier_dic(tierlist):
+def make_tier_dictionary(tierlist):
     """
     Takes a list of tiers and returns a dictionary containing their IDs as keys and
     the original tier as value.
