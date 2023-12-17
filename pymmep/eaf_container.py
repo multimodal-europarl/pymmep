@@ -13,12 +13,13 @@ np.seterr(all='raise')
 class Eaf_Container: # would it speed things up to make this a singleton...probably a horrible idea, but it would work around slow garbage collection?
     """
     This class is intended to hold all important values from an .eaf file.
+    It will also hold a lot of additional information that would not fit neatly into an .eaf file.
     
     This is intended to be used with the iterator from eaf_utils,
     to parse all .eaf information into a python structure
     (and save it pickled for later use).
     
-    The constructor takes one argument: the path to the .eaf file,
+    The constructor takes four arguments: the path to the .eaf file, and the results of "prepare_eaf(path)", 
     from here all relevant information is extracted.
     Call method .to_pickle(Path) to save the whole object.
     
@@ -35,18 +36,55 @@ class Eaf_Container: # would it speed things up to make this a singleton...proba
 
     ====================
     Attributes:
+    
+    lannguage_data : The dictionary that holds the language individual data <-- this is likely what you are here for. The keys are the 3-letter language codes.
+    
+        bul bulgarian
+        cze czech
+        dan danish
+        dut dutch
+        eng english
+        est estonian
+        fin finnish
+        fra french
+        ger german
+        gre greek
+        hun hungarian
+        ita italian
+        lav latvian
+        lit lithuanian
+        mlt maltese
+        pol polish
+        por portuguese
+        rum romanian
+        slo slovakian
+        slv slovenian
+        spa spanish
+        swe swedish
+        
+        the value of each key is another dictionary that holds the transcriptions, verbatim_reports, metadata and everything else I can find. The UML contains all keys.
 
     path : The path to the .eaf file as Path
 
-    time_dictionary : The TIME_ORDER block from the .eaf file (hash table for time values) as Dictionary
+    time_dictionary : The TIME_ORDER block from the .eaf file (hash table for time values) as Dictionary.
 
-    original_language : The language the speech was delivered in as String.
+    original_language : The language the speech was delivered in as 3 letter String. (determined by sequence matcher)
+    
+    speaker_name : The speaker's full name, speaker_name[0] being the first name, speaker_name[-1] being the last name.
 
     speaker_is_native : Info whether the speaker was considered speaking in his native language as Bool.
+    
+    speaker_birth : Info on the age of the speaker as Int.
+    
+    speaker_gender : Info on the gender of the speaker as 1 letter String.
+    
+    speaker_affiliation : Info on the group the speaker is speaking for as String.
 
     eaf_duration : Duration of the .eaf file in milliseconds as Int.
 
     mp3_paths : ---not implemented---
+    
+    _original_language_zcr : The language the speech was delivered in as 3 letter String. (determined by zcr)
 
     _filename : The filename without the .eaf as String
 
@@ -60,29 +98,42 @@ class Eaf_Container: # would it speed things up to make this a singleton...proba
     prepare_eaf(path) : This function calls several functions of pymmep.eaf_utils to prepare the data
         necessary to construct the Eaf_Container. The arguments can not be provided as list, so kindly
         write a[0], a[1], a[2] until I find a better way to only parse the xml once.
+        
+    describe() : Sums up the most important information about the speech (not yet implemented)
 
     ====================
     Example Usage:
 
     arguments = prepare_eaf("./files/file.eaf")
     eaf = Eaf_Container("./files/file.eaf", arguments[0], arguments[1], arguments[2])
-    eaf.to_pickle()    
+    eaf.to_pickle()
 
     """
     def __init__(self, path, time_dictionary, tier_dictionary, deco):
-        
+
         self.path = Path(path) # This holds the path to the source .eaf file as Path.
-        
+
         self._filename = self.path.name[:-4]    # This holds the file name without the ".eaf" as String
-                                                # Intended for export only
-            
+                                                # Intended for export only - but seeing surprising amounts of use
+
         self.time_dictionary = time_dictionary # This holds the whole time information block from the .eaf file as Dictionary.
-        
+
         self.eaf_duration = max(self.time_dictionary.values()) # This holds the duration of the .eaf file in milliseconds as Int.
-        
-        self.original_language = '' # This holds the original language of the speech as String.
-        
-        self.speaker_is_native = False # This holds whether the original speaker is considered native as Boolean. NOT IMPLEMENTED        
+
+        self.speaker_name = '' # holds the full name of the speaker, probably as Tuple of Strings. tuple[0] being the first name, tuple[-1] the last name.
+
+        self.original_language = '' # This holds the original language of the speech as 3 letter String.
+
+        self._speaker_original_language_zcr = "" # This holds the original language of the speech as assigned by the zero crossing rate method to detect interpreter voiceover as a 3 letter String.
+
+        self.speaker_is_native = False # This holds whether the original speaker is considered native as Boolean. NOT IMPLEMENTED
+
+        self.speaker_birth = 0 # holds the age in some way (see documentation of the function for the factors, probably just Wikipedia) as 4-8 digit Int or Date.
+
+        self.speaker_gender = "" # holds the automatically determined gender (see documentation of the function for the factors) as 1 letter String.
+
+        self.speaker_affiliation = "" # holds the automatically determined affiliation (group they are speaking for according to europarl verbatim) as varying length String.
+
 
         @property
         def mp3_paths(): # This will generate and return the relative 20 mp3 paths if they are ever needed
@@ -124,7 +175,10 @@ class Eaf_Container: # would it speed things up to make this a singleton...proba
                 'speaker_native': False,  # NOT IMPLEMENTED
                 'is_translation_perc' : 0.0, # Will be set later
                 'is_orig' : False, # Will be set later
-                'speech_duration' : 0 # Will be set later
+                'speech_duration' : 0, # Will be set later, sum of segments, intensity > x (eventually) as Int
+                'verbatim_file' : '', # name of europarl speech file as String
+                'verbatim_speech' : '', # speech from verbatim with highest ratio
+                'verbatim_ratio' : 0.0 # sequence matcher ratio
                }        
 
     def _parse_transcription_tier_into_df(self, index, tier_list):
@@ -148,33 +202,43 @@ class Eaf_Container: # would it speed things up to make this a singleton...proba
                                                                                            True,
                                                                                            False
                                                                                           )
-    # Functions to find and set the meta for the 22 dictionaries:
+    ###############################################################
+    # Functions to find and set the meta for the 22 dictionaries: #
+    ###############################################################
+    
     def _find_and_set_speaker_name(self):
         pass
     
     def _find_and_set_speaker_native(self):
         pass
     
+    # Calculate how much % of the annotated time is labled as translation IF this means dividing by 0, then something is broken and I set it to 9999
     def _find_and_set_translation_perc(self):
         list_of_translation_percents = []
         for language_code in self._language_list:
             try:
-                self.language_data[language_code]['is_translation_perc'] = self.language_data[language_code]['df_is_translation']['Value'].sum() / self.language_data[language_code]['df_is_translation']['Value'].count()
+                self.language_data[language_code]['is_translation_perc'] = self.language_data[language_code]['df_is_translation']['Value'].sum() / self.language_data[language_code]['df_is_translation']['Value'].count() # this line is the reason for np.seterr(all='raise')
             except:
                 self.language_data[language_code]['is_translation_perc'] = 9999
             list_of_translation_percents.append(self.language_data[language_code]['is_translation_perc'])
             self._find_and_set_is_original(list_of_translation_percents)
         self._find_and_set_original_language(list_of_translation_percents)
-
+    
+    # The language with the lowest "is_translation_perc" should be the original.
     def _find_and_set_is_original(self, translation_percents):
         self.language_data[self._language_list[np.argmin(translation_percents)]]['is_orig'] == True
-        
+    
+    # Add the language annotated time
     def _find_and_set_speech_duration(self):
         for language_code in self._language_list:
             self.language_data[language_code]['speech_duration'] = (self.language_data[language_code]['df_transcription']['Time_End']-self.language_data[language_code]['df_transcription']['Time_Start']).sum()
             
-        
-    # Functions to find and set the global meta:
+    
+    ##############################################
+    # Functions to find and set the global meta: #
+    ##############################################
+    
+    #
     def _find_and_set_original_language(self, translation_percents):
         self.original_language = self._language_list[np.argmin(translation_percents)]
     
@@ -213,12 +277,15 @@ class Eaf_Container: # would it speed things up to make this a singleton...proba
         big_df.drop('Annotation_REF', axis=1, inplace=True)
         return big_df
     
-    def make_duration_column(self): # It's 2 am and it's super simple
+    def make_duration_column(self): # It's 2 am and it's super simple, if I ever actually need this I'll write it and put it here.
         pass
     
-    def to_pickle(self):
-        with open('./output/{}.pickle'.format(self._filename), 'wb') as f:
+    def to_pickle(self, outpath='./_output/{}.pickle'):
+        with open(outpath.format(self._filename), 'wb') as f:
             pickle.dump(self, f, protocol=5)
 
     def remake_eaf(): # Maybe implement later
         pass  
+    
+    def describe(): #implement later, give key information quick
+        pass
