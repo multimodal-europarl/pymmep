@@ -12,16 +12,16 @@ jobs:
         python-version: [3.9]
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        persistent-credentials: false
-        fetch-depth: 0
-    - name: Build and publish module
-      env: # authentication
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      run: |
-        VERSION=$(echo ${{ github.ref }} | cut -d "v" -f 2 | xargs)
-        echo "Change module version to $VERSION"
-        poetry version $VERSION
-        poetry build
-        poetry publish -u "__token__" -p $PYPI_TOKEN
+      - uses: actions/checkout@v2
+        with:
+          persistent-credentials: false
+          fetch-depth: 0
+      - name: Build and publish module
+        env:     # authentication
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          VERSION=$(echo ${{ github.ref }} | cut -d "v" -f 2 | xargs)
+          echo "Change module version to $VERSION"
+          poetry version $VERSION
+          poetry build
+          poetry publish -u "__token__" -p $PYPI_TOKEN
