@@ -133,11 +133,11 @@ def extract_eaf(path):
     Output: (path, {dictionary of time slots}, {dictionary of tiers}, 
              [list of date, first property text information])
     """
-    tree = eaf_utils.parse_eaf(path)
+    tree = parse_eaf(path)
     return (path, 
-            eaf_utils.make_time_slot_dictionary(eaf_utils.get_time_slots(tree)), 
-            eaf_utils.make_tier_dictionary(eaf_utils.get_tiers(tree)), 
-            eaf_utils.get_decoration(tree))
+            make_time_slot_dictionary(get_time_slots(tree)), 
+            make_tier_dictionary(get_tiers(tree)), 
+            get_decoration(tree))
 
 
 
