@@ -121,6 +121,27 @@ def parse_eaf(eaf_path):
 
 
 
+def extract_eaf(path):
+    """
+    Takes the path of an eaf and extracts all information using this module's functions.
+
+    First calls parse_eaf() on the path to receive the tree.
+    From the tree it extracts and returns 
+    the {time slot information}, the {tier information}, the [date, first property text].
+
+    Input: path to eaf
+    Output: (path, {dictionary of time slots}, {dictionary of tiers}, 
+             [list of date, first property text information])
+    """
+    tree = eaf_utils.parse_eaf(path)
+    return (path, 
+            eaf_utils.make_time_slot_dictionary(eaf_utils.get_time_slots(tree)), 
+            eaf_utils.make_tier_dictionary(eaf_utils.get_tiers(tree)), 
+            eaf_utils.get_decoration(tree))
+
+
+
+
 def write_eaf(eaf, eaf_path):
     """
     Writes eaf tree (`eaf`) to file (`eaf_path`).
