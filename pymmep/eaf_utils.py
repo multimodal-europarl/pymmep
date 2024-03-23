@@ -4,7 +4,7 @@ Utilities relating to eaf transcription files.
 """
 from lxml import etree
 from pathlib import Path
-import base58, uuid
+import base58, haslib, uuid
 
 
 
@@ -134,9 +134,15 @@ def write_eaf(eaf, eaf_path):
 
 
 
-def xml_formatted_uuid():
+def xml_formatted_uuid(seed=None):
     """
     Generate a UUID and return it prepended with "i-" and formatted as a string
     so it can be used as an annotation ID (valid xml)
     """
-    return f"i-{str(base58.b58encode(uuid.uuid4().bytes), 'UTF8')}"
+    if seed is None:
+        x = uuid.uuid4()
+    else:
+        m = hashlib.md5()
+        m.update(seed.encode('utf-8'))
+        x = uuid.UUID(m.hexdigest())
+    return f"i-{str(base58.b58encode(x.bytes), 'UTF8')}"
