@@ -4,7 +4,7 @@ Utilities relating to eaf transcription files.
 """
 from lxml import etree
 from pathlib import Path
-import base58, haslib, uuid
+import base58, uuid, #haslib
 
 
 
@@ -121,6 +121,27 @@ def parse_eaf(eaf_path):
 
 
 
+def extract_eaf(path):
+    """
+    Takes the path of an eaf and extracts all information using this module's functions.
+
+    First calls parse_eaf() on the path to receive the tree.
+    From the tree it extracts and returns 
+    the {time slot information}, the {tier information}, the [date, first property text].
+
+    Input: path to eaf
+    Output: (path, {dictionary of time slots}, {dictionary of tiers}, 
+             [list of date, first property text information])
+    """
+    tree = parse_eaf(path)
+    return (path, 
+            make_time_slot_dictionary(get_time_slots(tree)), 
+            make_tier_dictionary(get_tiers(tree)), 
+            get_decoration(tree))
+
+
+
+
 def write_eaf(eaf, eaf_path):
     """
     Writes eaf tree (`eaf`) to file (`eaf_path`).
@@ -134,15 +155,15 @@ def write_eaf(eaf, eaf_path):
 
 
 
-def xml_formatted_uuid(seed=None):
-    """
-    Generate a UUID and return it prepended with "i-" and formatted as a string
-    so it can be used as an annotation ID (valid xml)
-    """
-    if seed is None:
-        x = uuid.uuid4()
-    else:
-        m = hashlib.md5()
-        m.update(seed.encode('utf-8'))
-        x = uuid.UUID(m.hexdigest())
-    return f"i-{str(base58.b58encode(x.bytes), 'UTF8')}"
+#def xml_formatted_uuid(seed=None):
+#    """
+#    Generate a UUID and return it prepended with "i-" and formatted as a string
+#    so it can be used as an annotation ID (valid xml)
+#    """
+#    if seed is None:
+#        x = uuid.uuid4()
+#    else:
+#        m = hashlib.md5()
+#        m.update(seed.encode('utf-8'))
+#        x = uuid.UUID(m.hexdigest())
+#    return f"i-{str(base58.b58encode(x.bytes), 'UTF8')}"
