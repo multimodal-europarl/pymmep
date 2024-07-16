@@ -4,7 +4,7 @@ Utilities relating to eaf transcription files.
 """
 from lxml import etree
 from pathlib import Path
-import base58, uuid, #haslib
+import base58, uuid, hashlib
 
 
 
